@@ -1,0 +1,52 @@
+/* Hourglass — chic monochrome theme + animations on top of Tailwind */
+
+html, body { -webkit-tap-highlight-color: transparent; }
+body { overscroll-behavior-y: none; }
+
+/* Section/modal visibility: when not hidden, lay out as flex.
+   (Tailwind `hidden` wins via specificity only while present; these fire once removed.) */
+#screen-auth:not(.hidden) { display: flex; }
+#active-overlay:not(.hidden),
+#picker-modal:not(.hidden),
+#timesup-modal:not(.hidden) { display: flex; }
+
+/* Hourglass ink color on the light home screen */
+#hourglass { color: #1B1A18; }
+
+/* Smooth sand level changes driven by JS (y / height of the rects) */
+#sandTop, #sandBottom, #sandMound,
+#sandTop2, #sandBottom2, #sandMound2 {
+  transition: y 0.7s ease, height 0.7s ease, rx 0.7s ease, cy 0.7s ease;
+}
+
+/* Falling sand stream — visible only while a session is active */
+.stream-line { animation: streamPulse 1s ease-in-out infinite; transform-origin: 100px 161px; }
+@keyframes streamPulse {
+  0%, 100% { opacity: 0.45; transform: scaleY(0.85); }
+  50%      { opacity: 1;   transform: scaleY(1.1); }
+}
+
+.grain { opacity: 0; }
+.grain1 { animation: fall 1s linear infinite; }
+.grain2 { animation: fall 1s linear infinite; animation-delay: 0.5s; }
+@keyframes fall {
+  0%   { transform: translateY(-12px); opacity: 0; }
+  15%  { opacity: 0.9; }
+  85%  { opacity: 0.9; }
+  100% { transform: translateY(20px); opacity: 0; }
+}
+
+/* whisper-quiet idle sway on the home hourglass */
+#hourglass { animation: sway 7s ease-in-out infinite; transform-origin: 50% 50%; }
+@keyframes sway {
+  0%, 100% { transform: rotate(-0.8deg); }
+  50%      { transform: rotate(0.8deg); }
+}
+
+/* toast */
+#toast.show { display: block; animation: toastIn 0.25s ease; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  #hourglass, .grain1, .grain2, .stream-line { animation: none !important; }
+}

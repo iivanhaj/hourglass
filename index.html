@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+  <title>Hourglass</title>
+  <meta name="description" content="Earn time by focusing. Spend it scrolling. Keep your friends honest." />
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#F4F1EA" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Hourglass" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <!-- Tailwind + Supabase via CDN (no build step) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper:  '#F4F1EA',  // warm off-white
+            card:   '#FBFAF6',  // slightly lighter surface
+            ink:    '#1B1A18',  // near-black
+            inkmut: '#7A766E',  // muted gray
+            line:   '#DAD5C9',  // hairline
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            body: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          fontWeight: {
+            400: '400', 500: '500', 600: '600', 700: '700',
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css" />
+  <script src="config.js"></script>
+</head>
+
+<body class="bg-paper text-ink font-body min-h-screen antialiased select-none">
+
+  <!-- ===================== AUTH SCREEN ===================== -->
+  <section id="screen-auth" class="hidden min-h-screen flex-col items-center justify-center px-8 py-10">
+    <div class="w-full max-w-sm">
+      <div class="mx-auto mb-7 h-20 w-20 text-ink">
+        <svg viewBox="0 0 200 300" class="h-full w-full"><use href="#hourglass-mark" /></svg>
+      </div>
+      <h1 class="text-center font-display text-5xl font-600 tracking-tight text-ink">Hourglass</h1>
+      <p class="mt-3 text-center text-sm font-500 text-inkmut">Earn your scroll. Keep each other honest.</p>
+
+      <div class="mt-10 space-y-6">
+        <div id="auth-name-wrap" class="hidden">
+          <label class="mb-2 block text-[11px] font-600 uppercase tracking-[0.18em] text-inkmut">Display name</label>
+          <input id="auth-name" type="text" autocomplete="nickname" placeholder="What friends see"
+            class="w-full border-0 border-b border-line bg-transparent pb-2 font-500 text-ink placeholder:text-inkmut/60 focus:border-ink focus:ring-0 outline-none" />
+        </div>
+        <div>
+          <label class="mb-2 block text-[11px] font-600 uppercase tracking-[0.18em] text-inkmut">Email</label>
+          <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"
+            class="w-full border-0 border-b border-line bg-transparent pb-2 font-500 text-ink placeholder:text-inkmut/60 focus:border-ink focus:ring-0 outline-none" />
+        </div>
+        <div>
+          <label class="mb-2 block text-[11px] font-600 uppercase tracking-[0.18em] text-inkmut">Password</label>
+          <input id="auth-password" type="password" autocomplete="current-password" placeholder="••••••••"
+            class="w-full border-0 border-b border-line bg-transparent pb-2 font-500 text-ink placeholder:text-inkmut/60 focus:border-ink focus:ring-0 outline-none" />
+        </div>
+
+        <p id="auth-error" class="hidden border-l-2 border-ink pl-3 text-sm font-500 text-ink"></p>
+
+        <button id="auth-submit"
+          class="w-full rounded-full bg-ink px-4 py-3.5 font-600 tracking-wide text-paper transition active:scale-[0.98] disabled:opacity-50">
+          Sign in
+        </button>
+        <button id="auth-toggle" class="block w-full text-center text-sm font-500 text-inkmut">
+          New here? <span class="text-ink underline underline-offset-2">Create an account</span>
+        </button>
+      </div>
+      <p id="auth-config-warn" class="mt-6 hidden text-center text-xs font-600 text-ink">
+        Supabase isn't configured yet — set your keys in config.js.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== APP SHELL ===================== -->
+  <main id="app-shell" class="hidden mx-auto flex min-h-screen w-full max-w-md flex-col pb-24">
+
+    <!-- ---------- HOME / BALANCE ---------- -->
+    <section id="screen-home" class="flex flex-1 flex-col px-7 pt-9">
+      <header class="flex items-start justify-between">
+        <div>
+          <p class="text-[11px] font-600 uppercase tracking-[0.18em] text-inkmut">Good to see you</p>
+          <p id="home-name" class="mt-0.5 font-display text-3xl font-600 text-ink">friend</p>
+        </div>
+        <button id="btn-signout" class="mt-1 text-xs font-500 text-inkmut underline underline-offset-2">Sign out</button>
+      </header>
+
+      <!-- The hourglass -->
+      <div class="relative mx-auto mt-6 w-56 text-ink">
+        <svg id="hourglass" viewBox="0 0 200 320" class="w-full">
+          <defs>
+            <clipPath id="clipTop"><path d="M48 48 L152 48 L100 158 Z" /></clipPath>
+            <clipPath id="clipBottom"><path d="M100 162 L48 272 L152 272 Z" /></clipPath>
+          </defs>
+          <!-- sand -->
+          <g clip-path="url(#clipTop)">
+            <rect id="sandTop" x="44" y="158" width="112" height="220" fill="currentColor" fill-opacity="0.88" />
+          </g>
+          <g clip-path="url(#clipBottom)">
+            <rect id="sandBottom" x="44" y="272" width="112" height="0" fill="currentColor" fill-opacity="0.88" />
+            <ellipse id="sandMound" cx="100" cy="272" rx="0" ry="5" fill="currentColor" fill-opacity="0.88" />
+          </g>
+          <!-- falling stream + grains -->
+          <g id="sandStream" class="opacity-0">
+            <line x1="100" y1="150" x2="100" y2="172" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="stream-line" />
+            <circle class="grain grain1" cx="100" cy="160" r="1.8" fill="currentColor" />
+            <circle class="grain grain2" cx="100" cy="166" r="1.5" fill="currentColor" />
+          </g>
+          <!-- glass outline -->
+          <path d="M48 48 L152 48 L100 158 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+          <path d="M100 162 L48 272 L152 272 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+          <!-- caps -->
+          <line x1="40" y1="44" x2="160" y2="44" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+          <line x1="40" y1="276" x2="160" y2="276" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <!-- balance readout -->
+      <div class="mt-4 text-center">
+        <p id="balance-big" class="font-display text-6xl font-500 text-ink">0<span class="ml-1 font-body text-base font-500 lowercase tracking-wide text-inkmut">min</span></p>
+        <p id="balance-caption" class="mt-2 font-display text-base font-400 italic text-inkmut">in the glass</p>
+      </div>
+
+      <!-- actions -->
+      <div class="mt-auto space-y-3 py-7">
+        <button id="btn-start-focus"
+          class="w-full rounded-full bg-ink px-5 py-4 font-600 tracking-wide text-paper transition active:scale-[0.98]">
+          Start focus session
+        </button>
+        <button id="btn-start-scroll"
+          class="w-full rounded-full border border-ink bg-transparent px-5 py-4 font-600 tracking-wide text-ink transition active:scale-[0.98]">
+          Start scrolling
+        </button>
+      </div>
+    </section>
+
+    <!-- ---------- FRIENDS ---------- -->
+    <section id="screen-friends" class="hidden flex-1 flex-col px-7 pt-9">
+      <p class="text-[11px] font-600 uppercase tracking-[0.18em] text-inkmut">Accountability</p>
+      <h2 class="mt-1 font-display text-4xl font-600 text-ink">The circle</h2>
+      <div id="friends-list" class="mt-7 border-t border-line"></div>
+      <p id="friends-empty" class="mt-10 text-center font-display text-base italic text-inkmut">No one else yet — invite a friend.</p>
+    </section>
+
+    <!-- ---------- HISTORY ---------- -->
+    <section id="screen-history" class="hidden flex-1 flex-col px-7 pt-9">
+      <p class="text-[11px] font-600 uppercase tracking-[0.18em] text-inkmut">Every grain counted</p>
+      <h2 class="mt-1 font-display text-4xl font-600 text-ink">The ledger</h2>
+      <div id="history-list" class="mt-7 border-t border-line"></div>
+      <p id="history-empty" class="mt-10 text-center font-display text-base italic text-inkmut">No sessions yet. Go earn some sand.</p>
+    </section>
+
+    <!-- ---------- BOTTOM NAV ---------- -->
+    <nav class="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center justify-around border-t border-line bg-paper/95 px-8 pb-7 pt-4 backdrop-blur">
+      <button data-nav="home" class="nav-btn text-[11px] font-600 uppercase tracking-[0.16em] text-ink">Home</button>
+      <button data-nav="friends" class="nav-btn text-[11px] font-600 uppercase tracking-[0.16em] text-inkmut">Friends</button>
+      <button data-nav="history" class="nav-btn text-[11px] font-600 uppercase tracking-[0.16em] text-inkmut">Ledger</button>
+    </nav>
+  </main>
+
+  <!-- ===================== ACTIVE SESSION OVERLAY ===================== -->
+  <div id="active-overlay" class="hidden fixed inset-0 z-40 flex-col items-center justify-center px-8 text-center">
+    <p id="active-label" class="text-[11px] font-600 uppercase tracking-[0.22em]"></p>
+    <p id="active-sub" class="mt-2 font-display text-base font-400 italic opacity-70"></p>
+
+    <div class="my-9 w-44">
+      <svg id="hourglass2" viewBox="0 0 200 320" class="w-full">
+        <defs>
+          <clipPath id="clipTop2"><path d="M48 48 L152 48 L100 158 Z" /></clipPath>
+          <clipPath id="clipBottom2"><path d="M100 162 L48 272 L152 272 Z" /></clipPath>
+        </defs>
+        <g clip-path="url(#clipTop2)">
+          <rect id="sandTop2" x="44" y="158" width="112" height="220" fill="currentColor" fill-opacity="0.88" />
+        </g>
+        <g clip-path="url(#clipBottom2)">
+          <rect id="sandBottom2" x="44" y="272" width="112" height="0" fill="currentColor" fill-opacity="0.88" />
+          <ellipse id="sandMound2" cx="100" cy="272" rx="0" ry="5" fill="currentColor" fill-opacity="0.88" />
+        </g>
+        <g id="sandStream2" class="opacity-0">
+          <line x1="100" y1="150" x2="100" y2="172" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="stream-line" />
+          <circle class="grain grain1" cx="100" cy="160" r="1.8" fill="currentColor" />
+          <circle class="grain grain2" cx="100" cy="166" r="1.5" fill="currentColor" />
+        </g>
+        <path d="M48 48 L152 48 L100 158 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+        <path d="M100 162 L48 272 L152 272 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+        <line x1="40" y1="44" x2="160" y2="44" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+        <line x1="40" y1="276" x2="160" y2="276" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <p id="active-timer" class="font-display text-7xl font-500 tabular-nums">00:00</p>
+    <p id="active-balance" class="mt-3 text-sm font-600 uppercase tracking-[0.16em] opacity-70"></p>
+
+    <button id="btn-stop"
+      class="mt-11 w-full max-w-xs rounded-full border-2 border-current bg-transparent px-5 py-3.5 font-600 tracking-wide transition active:scale-[0.98]">
+      Stop
+    </button>
+  </div>
+
+  <!-- ===================== SCROLL TARGET PICKER ===================== -->
+  <div id="picker-modal" class="hidden fixed inset-0 z-50 items-end justify-center bg-ink/30 px-4 pb-6 sm:items-center">
+    <div class="w-full max-w-sm rounded-3xl border border-line bg-card p-7 shadow-xl">
+      <h3 class="font-display text-2xl font-600 text-ink">What are you scrolling?</h3>
+      <p class="mt-1 text-sm font-500 text-inkmut">This drains your glass in real time.</p>
+      <div class="mt-6 divide-y divide-line border-y border-line">
+        <button data-target="instagram" class="picker-opt flex w-full items-center justify-between py-3.5 text-left font-600 text-ink active:opacity-60"><span>Instagram</span><span class="text-inkmut">→</span></button>
+        <button data-target="youtube"   class="picker-opt flex w-full items-center justify-between py-3.5 text-left font-600 text-ink active:opacity-60"><span>YouTube</span><span class="text-inkmut">→</span></button>
+        <button data-target="netflix"   class="picker-opt flex w-full items-center justify-between py-3.5 text-left font-600 text-ink active:opacity-60"><span>Netflix</span><span class="text-inkmut">→</span></button>
+      </div>
+      <button id="picker-cancel" class="mt-5 w-full text-center text-sm font-500 text-inkmut">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ===================== TIME'S UP MODAL ===================== -->
+  <div id="timesup-modal" class="hidden fixed inset-0 z-[60] items-center justify-center bg-ink/40 px-7">
+    <div class="w-full max-w-sm rounded-3xl border border-line bg-card p-8 text-center shadow-xl">
+      <div class="mx-auto h-14 w-14 text-ink"><svg viewBox="0 0 200 300" class="h-full w-full"><use href="#hourglass-mark" /></svg></div>
+      <h3 class="mt-5 font-display text-3xl font-600 text-ink">Sand's run out</h3>
+      <p class="mt-3 text-sm font-500 text-inkmut">Your glass is empty. No more borrowed time — go earn some back, or call it for now.</p>
+      <button id="timesup-stop" class="mt-7 w-full rounded-full bg-ink px-5 py-3.5 font-600 tracking-wide text-paper active:scale-[0.98]">Okay, I'll stop</button>
+      <button id="timesup-keep" class="mt-3 w-full text-sm font-500 text-inkmut underline underline-offset-2">Keep going (into the red)</button>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div id="toast" class="pointer-events-none fixed inset-x-0 top-7 z-[70] mx-auto hidden w-max max-w-[90%] rounded-full bg-ink px-5 py-2.5 text-center text-sm font-600 text-paper shadow-lg"></div>
+
+  <!-- shared hourglass mark (minimal line) -->
+  <svg width="0" height="0" class="absolute">
+    <symbol id="hourglass-mark" viewBox="0 0 200 300">
+      <path d="M50 40 L150 40 L100 145 Z" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/>
+      <path d="M100 150 L50 255 L150 255 Z" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round"/>
+      <line x1="42" y1="36" x2="158" y2="36" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+      <line x1="42" y1="259" x2="158" y2="259" stroke="currentColor" stroke-width="9" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+
+  <script src="app.js"></script>
+</body>
+</html>
