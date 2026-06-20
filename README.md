@@ -1,4 +1,4 @@
-# ⧗ Hourglass
+# Hourglass
 
 > Earn your scroll. Keep each other honest.
 
@@ -20,13 +20,13 @@ The three tabs (Home · Friends · Ledger) share a bottom navigation bar. Starti
 
 ---
 
-## ✦ Design
+## Design
 
 Chic, editorial monochrome — warm off-white paper (`#F4F1EA`), near-black ink (`#1B1A18`), [Fraunces](https://fonts.google.com/specimen/Fraunces) serif paired with [Inter](https://fonts.google.com/specimen/Inter), ruled "notebook" lists, and a minimal line-drawn hourglass. No color, no emoji — just type, hairlines, and whitespace.
 
 ---
 
-## 🧩 Tech stack
+## Tech stack
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -40,7 +40,7 @@ There is **no bundler, no framework, no `npm install`** required to run the app.
 
 ---
 
-## 📁 Project structure
+## Project structure
 
 ```
 hourglass/
@@ -58,7 +58,7 @@ hourglass/
 
 ---
 
-## 🧠 How it works (the important bits)
+## How it works (the important bits)
 
 ### Balance is *derived*, never stored
 There is **no `balances` table**. A user's balance is always computed on the fly from their `sessions`:
@@ -88,7 +88,7 @@ Row-Level Security: any signed-in user can **read all** profiles/sessions (neede
 
 ---
 
-## 🚀 Run it locally
+## Run it locally
 
 You only need [Node.js](https://nodejs.org/) (for the static server) and a browser.
 
@@ -104,7 +104,7 @@ Then open http://localhost:5050. (Any static server works — `python -m http.se
 
 ---
 
-## 🔧 First-time Supabase setup
+## First-time Supabase setup
 
 If you're wiring this to a **fresh** Supabase project:
 
@@ -127,7 +127,7 @@ That's the whole backend.
 
 ---
 
-## ☁️ Deploy
+## Deploy
 
 The repo deploys as a static site on Vercel with zero config:
 
@@ -139,7 +139,7 @@ To get **automatic deploys on every push**, connect this GitHub repo in the Verc
 
 ---
 
-## 📱 How to use
+## How to use
 
 1. Open the live URL on your phone and **create an account** (pick a display name your friends will see).
 2. **Install it:** Safari → Share → *Add to Home Screen*; Chrome → ⋮ → *Install app*.
@@ -149,13 +149,13 @@ To get **automatic deploys on every push**, connect this GitHub repo in the Verc
 
 ---
 
-## 🔒 Security note on `config.js`
+## Security note on `config.js`
 
 The Supabase key in `config.js` is the **publishable / anon** key. It is *designed* to be shipped in frontend code and is safe to commit — it can only do what Row-Level Security allows (read all rows, write your own). It is **not** a service-role/secret key. If you ever need to rotate it, do so in the Supabase dashboard and update `config.js`.
 
 ---
 
-## 🛣️ Roadmap (Phase 2, deliberately not in v1)
+## Roadmap (Phase 2, deliberately not in v1)
 
 - Real OS-level enforcement: native **Android** (UsageStatsManager + Accessibility Service) and **iOS** (Screen Time / Family Controls) — separate native projects, not this PWA.
 - A desktop **browser extension** as an interim enforcement step.
@@ -163,8 +163,3 @@ The Supabase key in `config.js` is the **publishable / anon** key. It is *design
 
 v1 is intentionally honor-system: it ships tonight, and generates real usage data to scope enforcement correctly.
 
----
-
-## License
-
-Personal project — do what you like with it.
